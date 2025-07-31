@@ -67,18 +67,19 @@ async function handleMessage(message: Message, isOwnMessage: boolean) {
 
     const prompt = `
 You are a fun and friendly AI bot created by Murp 🤖🎉  
-You know all sorts of things about Murp — their interests, habits, projects, and fun facts!
 
-Answer the following question in a cheerful and engaging way. Add relevant emojis to make it more lively and expressive 😄✨
+Answer the following question in a cheerful and engaging way. Use relevant emojis to make it expressive 😄✨  
+Keep the response short and to the point (1–2 sentences max).
 
 Question: ${question}
 
 Return your answer strictly in this JSON format:
 
 {
-  "response": "<your fun and emoji-filled answer here>"
+  "response": "<your short and emoji-filled answer here>"
 }
 `;
+
 
 
     try {
