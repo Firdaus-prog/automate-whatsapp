@@ -1,4 +1,3 @@
-// index.ts
 import { Client, LocalAuth, Message } from 'whatsapp-web.js';
 import qrcode from 'qrcode-terminal';
 
@@ -6,51 +5,58 @@ const client = new Client({
   authStrategy: new LocalAuth(),
 });
 
-client.on('qr', (qr: string) => {
+let meId: string | null = null;
+
+// Show QR code for login
+client.on('qr', (qr) => {
   qrcode.generate(qr, { small: true });
 });
 
+// When client is ready
 client.on('ready', () => {
+  meId = client.info.wid._serialized;
   console.log('✅ Client is ready!');
+  console.log('👤 Logged in as:', meId);
 });
 
-client.on('message', (message: Message) => {
-  console.log('📩 Message received:', message.body);
+// Unified message handler
+async function handleMessage(message: Message, isOwnMessage: boolean) {
+  const chat = await message.getChat();
+  const timestamp = new Date().toLocaleTimeString();
 
-  if (message.body === '!hello') {
-    message.reply('Hello from TypeScript!');
+  let header = '';
+
+  if (isOwnMessage && chat.id._serialized === meId) {
+    header = `\n--- 🔵 Message to Yourself ---`;
+  } else if (chat.isGroup) {
+    header = `\n--- 🟢 Group Message: ${chat.name} ---`;
+  } else if (isOwnMessage) {
+    header = `\n--- 🔷 Message Sent by You to ${chat.name || chat.id.user} ---`;
+  } else {
+    header = `\n--- 🟣 Direct Message from ${message.from} ---`;
   }
-});
 
-// client.on('ready', async () => {
-//     console.log('✅ Client is ready!');
-  
-//     const number = '601153371227'; // Mirza
-//     const chatId = number + '@c.us';
-  
-//     await client.sendMessage(chatId, 'Hello from TypeScript + whatsapp-web.js!');
-//   });
+  console.log(`${header}\n🕒 ${timestamp}\n📩 Message: ${message.body}`);
 
-client.on('message', async (message) => {
-    const chat = await message.getChat();
-  
-    if (chat.isGroup) {
-      console.log('👥 Message is from a group:', chat.name);
+  // Command responses
+  if (message.body === '!hello') {
+    if (isOwnMessage) {
+      setTimeout(() => {
+        client.sendMessage(message.from, `👋 Hello! (from yourself)`).catch(() => {});
+      }, 500);
     } else {
-      console.log('🙋‍♂️ Message is from an individual:', message.from);
+      await message.reply('👋 Hello!');
     }
-  });
-  
+  } else if (message.body === '!ping') {
+    await client.sendMessage(message.from, 'pong');
+  } else if (message.body === '!hi') {
+    await client.sendMessage(message.from, 'Hello there! 👋');
+  }
+}
 
-client.on('message', async (message) => {
-    if (message.body === '!ping') {
-      await message.reply('pong');
-    }
-    if (message.body === '!hi') {
-      await client.sendMessage(message.from, 'Hello there! 👋');
-    }
-  });
-  
-  
+// Handle all messages (sent or received)
+client.on('message_create', (message) => {
+  handleMessage(message, message.fromMe);
+});
 
 client.initialize();
