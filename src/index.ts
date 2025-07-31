@@ -92,7 +92,7 @@ Return your answer strictly in this JSON format:
           client.sendMessage(message.from, `🤖 ${reply}`).catch(() => {});
         }, 500);
       } else {
-        await message.reply('👋 Hello!');
+        await message.reply(`🤖 ${reply}`);
       }
     } catch (err) {
       console.error('❌ AI query failed:', err);
